@@ -220,7 +220,6 @@ local function CreateESP(player)
             if onScreen and ESP_Settings.Enabled and ESP_Settings.Tracers then
                 line.Color = currentColor
                 line.To = Vector2.new(vector.X, vector.Y)
-                -- Yahan change kiya hai: 0 matlab Top of the screen
                 line.From = Vector2.new(Camera.ViewportSize.X / 2, 0) 
                 line.Visible = true
             else
@@ -232,7 +231,8 @@ local function CreateESP(player)
             gui.Enabled = ESP_Settings.Enabled and ESP_Settings.Names
             if gui.Enabled then
                 local dist = (root.Position - Camera.CFrame.Position).Magnitude
-                lbl.Text = string.format("%s\n%d HP\n[%d studs]", player.Name, math.floor(hum.Health), math.floor(dist))
+                -- Changed to DisplayName here
+                lbl.Text = string.format("%s\n%d HP\n[%d studs]", player.DisplayName, math.floor(hum.Health), math.floor(dist))
                 lbl.TextColor3 = currentColor
             end
         end)
