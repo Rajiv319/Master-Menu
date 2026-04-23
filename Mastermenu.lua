@@ -1,4 +1,4 @@
--- MASTER MENU V3 + FOV MOBILE AIMBOT (INTEGRATED)
+-- --- MASTER MENU V4 (TOP TRACERS + CAM FLY) ---
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -18,19 +18,18 @@ local ESP_Settings = {
     NoclipEnabled = false,
     AimbotMaster = false,
     AimbotActive = false,
-    SpeedValue = 100,
-    FlySpeed = 50,
-    FOV_Radius = 200 -- Is radius ke andar wale enemy hi lock honge
+    SpeedValue = 300,
+    FlySpeed = 70,
+    FOV_Radius = 200 
 }
 
 local Hue = 0
 
--- --- GUI CREATION ---
+-- --- GUI ---
 local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-ScreenGui.Name = "MasterMenu_Aimbot_V4"
+ScreenGui.Name = "MasterMenu_Final_V4"
 ScreenGui.ResetOnSpawn = false
 
--- --- MOBILE AIMBOT TOGGLE (FLOATING) ---
 local AimBtn = Instance.new("TextButton", ScreenGui)
 AimBtn.Size = UDim2.new(0, 50, 0, 50)
 AimBtn.Position = UDim2.new(0.8, 0, 0.4, 0)
@@ -42,7 +41,6 @@ AimBtn.Draggable = true
 AimBtn.Active = true
 Instance.new("UICorner", AimBtn).CornerRadius = UDim.new(0, 10)
 
--- --- MAIN MENU ---
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Size = UDim2.new(0, 180, 0, 395)
 MainFrame.Position = UDim2.new(0, 50, 0.3, 0)
@@ -109,46 +107,21 @@ CreateToggle("Master ESP", y, "Enabled"); y = y + 35
 CreateToggle("Boxes", y, "Boxes"); y = y + 35
 CreateToggle("Tracers", y, "Tracers"); y = y + 35
 CreateToggle("Names", y, "Names"); y = y + 35
-CreateToggle("Speed", y, "SpeedEnabled"); y = y + 35
-CreateToggle("Fly", y, "FlyEnabled"); y = y + 35
+CreateToggle("Speed hack", y, "SpeedEnabled"); y = y + 35
+CreateToggle("Fly (Cam Mode)", y, "FlyEnabled"); y = y + 35
 CreateToggle("Noclip", y, "NoclipEnabled"); y = y + 35
 CreateToggle("Aimbot Master", y, "AimbotMaster", function(s) 
     AimBtn.Visible = s 
     if not s then ESP_Settings.AimbotActive = false end
 end); y = y + 35
 
--- Mobile Aim Button Click
 AimBtn.MouseButton1Click:Connect(function()
     ESP_Settings.AimbotActive = not ESP_Settings.AimbotActive
     AimBtn.BackgroundColor3 = ESP_Settings.AimbotActive and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
     AimBtn.Text = ESP_Settings.AimbotActive and "ON" or "OFF"
 end)
 
--- --- AIMBOT LOGIC (CENTER-SCREEN PRIORITY) ---
-local function GetClosestToCenter()
-    local Target = nil
-    local MaxDist = ESP_Settings.FOV_Radius
-    local Center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-
-    for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-            local Hum = v.Character:FindFirstChild("Humanoid")
-            if Hum and Hum.Health > 0 then
-                local ScreenPos, OnScreen = Camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
-                if OnScreen then
-                    local MouseDist = (Vector2.new(ScreenPos.X, ScreenPos.Y) - Center).Magnitude
-                    if MouseDist < MaxDist then
-                        MaxDist = MouseDist
-                        Target = v
-                    end
-                end
-            end
-        end
-    end
-    return Target
-end
-
--- --- UPDATE LOOPS ---
+-- --- AIMBOT & FLY LOOPS ---
 RunService.RenderStepped:Connect(function(dt)
     Hue = (Hue + dt * 0.2) % 1
     local char = LocalPlayer.Character
@@ -156,18 +129,40 @@ RunService.RenderStepped:Connect(function(dt)
     local hum = char and char:FindFirstChild("Humanoid")
     
     if hrp and hum then
-        -- Speed/Fly
         hum.WalkSpeed = ESP_Settings.SpeedEnabled and ESP_Settings.SpeedValue or 16
+        
         if ESP_Settings.FlyEnabled then
             hum.PlatformStand = true
-            hrp.Velocity = (hum.MoveDirection * ESP_Settings.FlySpeed)
+            if hum.MoveDirection.Magnitude > 0 then
+                hrp.Velocity = Camera.CFrame.LookVector * ESP_Settings.FlySpeed
+            else
+                hrp.Velocity = Vector3.new(0, 0, 0)
+            end
         else
             if hum.PlatformStand then hum.PlatformStand = false end
         end
 
-        -- Aimbot (Facing Target Only)
         if ESP_Settings.AimbotMaster and ESP_Settings.AimbotActive then
-            local Target = GetClosestToCenter()
+            local Target = nil
+            local MaxDist = ESP_Settings.FOV_Radius
+            local Center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
+            for _, v in pairs(Players:GetPlayers()) do
+                if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                    local h = v.Character:FindFirstChild("Humanoid")
+                    if h and h.Health > 0 then
+                        local ScreenPos, OnScreen = Camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+                        if OnScreen then
+                            local MouseDist = (Vector2.new(ScreenPos.X, ScreenPos.Y) - Center).Magnitude
+                            if MouseDist < MaxDist then
+                                MaxDist = MouseDist
+                                Target = v
+                            end
+                        end
+                    end
+                end
+            end
+            
             if Target and Target.Character:FindFirstChild("HumanoidRootPart") then
                 Camera.CFrame = CFrame.new(Camera.CFrame.Position, Target.Character.HumanoidRootPart.Position)
             end
@@ -175,7 +170,6 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
--- Noclip Heartbeat
 RunService.Heartbeat:Connect(function()
     if ESP_Settings.NoclipEnabled and LocalPlayer.Character then
         for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
@@ -184,7 +178,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- --- ESP LOGIC ---
+-- --- ESP RENDERING (TOP SCREEN TRACERS) ---
 local function CreateESP(player)
     if player == LocalPlayer then return end
     local line = Drawing.new("Line")
@@ -226,7 +220,8 @@ local function CreateESP(player)
             if onScreen and ESP_Settings.Enabled and ESP_Settings.Tracers then
                 line.Color = currentColor
                 line.To = Vector2.new(vector.X, vector.Y)
-                line.From = Vector2.new(Camera.ViewportSize.X / 2, 0)
+                -- Yahan change kiya hai: 0 matlab Top of the screen
+                line.From = Vector2.new(Camera.ViewportSize.X / 2, 0) 
                 line.Visible = true
             else
                 line.Visible = false
