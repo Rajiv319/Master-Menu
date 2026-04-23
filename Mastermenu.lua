@@ -19,7 +19,7 @@ local ESP_Settings = {
     AimbotMaster = false,
     AimbotActive = false,
     SpeedValue = 300,
-    FlySpeed = 70,
+    FlySpeed = 250,
     FOV_Radius = 200 
 }
 
