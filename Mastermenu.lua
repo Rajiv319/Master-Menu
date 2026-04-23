@@ -16,7 +16,7 @@ local ESP_Settings = {
     SpeedEnabled = false,
     FlyEnabled = false,
     NoclipEnabled = false,
-    SpeedValue = 100,
+    SpeedValue = 300,
     FlySpeed = 50
 }
 
