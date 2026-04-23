@@ -1,4 +1,4 @@
--- Master Menu: RGB ESP + Speed, Fly, Noclip
+-- MASTER MENU V3 + FOV MOBILE AIMBOT (INTEGRATED)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -16,22 +16,37 @@ local ESP_Settings = {
     SpeedEnabled = false,
     FlyEnabled = false,
     NoclipEnabled = false,
-    SpeedValue = 300,
-    FlySpeed = 50
+    AimbotMaster = false,
+    AimbotActive = false,
+    SpeedValue = 100,
+    FlySpeed = 50,
+    FOV_Radius = 200 -- Is radius ke andar wale enemy hi lock honge
 }
 
 local Hue = 0
 
 -- --- GUI CREATION ---
 local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-ScreenGui.Name = "ESPMaster_V3"
+ScreenGui.Name = "MasterMenu_Aimbot_V4"
 ScreenGui.ResetOnSpawn = false
 
+-- --- MOBILE AIMBOT TOGGLE (FLOATING) ---
+local AimBtn = Instance.new("TextButton", ScreenGui)
+AimBtn.Size = UDim2.new(0, 50, 0, 50)
+AimBtn.Position = UDim2.new(0.8, 0, 0.4, 0)
+AimBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+AimBtn.Text = "AIM"
+AimBtn.TextColor3 = Color3.new(1, 1, 1)
+AimBtn.Visible = false 
+AimBtn.Draggable = true
+AimBtn.Active = true
+Instance.new("UICorner", AimBtn).CornerRadius = UDim.new(0, 10)
+
+-- --- MAIN MENU ---
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 180, 0, 360)
+MainFrame.Size = UDim2.new(0, 180, 0, 395)
 MainFrame.Position = UDim2.new(0, 50, 0.3, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 Instance.new("UICorner", MainFrame)
@@ -56,17 +71,17 @@ local Content = Instance.new("ScrollingFrame", MainFrame)
 Content.Size = UDim2.new(1, 0, 1, -40)
 Content.Position = UDim2.new(0, 0, 0, 40)
 Content.BackgroundTransparency = 1
-Content.CanvasSize = UDim2.new(0, 0, 0, 400)
+Content.CanvasSize = UDim2.new(0, 0, 0, 450)
 Content.ScrollBarThickness = 2
 
 MinBtn.MouseButton1Click:Connect(function()
     ESP_Settings.MenuOpen = not ESP_Settings.MenuOpen
     Content.Visible = ESP_Settings.MenuOpen
-    MainFrame.Size = ESP_Settings.MenuOpen and UDim2.new(0, 180, 0, 360) or UDim2.new(0, 180, 0, 35)
+    MainFrame.Size = ESP_Settings.MenuOpen and UDim2.new(0, 180, 0, 395) or UDim2.new(0, 180, 0, 35)
     MinBtn.Text = ESP_Settings.MenuOpen and "-" or "+"
 end)
 
-local function CreateToggle(name, pos, stateKey)
+local function CreateToggle(name, pos, stateKey, callback)
     local btn = Instance.new("TextButton", Content)
     btn.Size = UDim2.new(0.9, 0, 0, 30)
     btn.Position = UDim2.new(0.05, 0, 0, pos)
@@ -83,26 +98,98 @@ local function CreateToggle(name, pos, stateKey)
     btn.MouseButton1Click:Connect(function()
         ESP_Settings[stateKey] = not ESP_Settings[stateKey]
         update()
+        if callback then callback(ESP_Settings[stateKey]) end
     end)
     update()
 end
 
--- UI Layout
-local y_pos = 0
-CreateToggle("Master ESP", y_pos, "Enabled"); y_pos = y_pos + 35
-CreateToggle("Boxes", y_pos, "Boxes"); y_pos = y_pos + 35
-CreateToggle("Tracers", y_pos, "Tracers"); y_pos = y_pos + 35
-CreateToggle("Names", y_pos, "Names"); y_pos = y_pos + 35
-CreateToggle("Speed", y_pos, "SpeedEnabled"); y_pos = y_pos + 35
-CreateToggle("Fly", y_pos, "FlyEnabled"); y_pos = y_pos + 35
-CreateToggle("Noclip", y_pos, "NoclipEnabled"); y_pos = y_pos + 35
+-- --- UI LAYOUT ---
+local y = 0
+CreateToggle("Master ESP", y, "Enabled"); y = y + 35
+CreateToggle("Boxes", y, "Boxes"); y = y + 35
+CreateToggle("Tracers", y, "Tracers"); y = y + 35
+CreateToggle("Names", y, "Names"); y = y + 35
+CreateToggle("Speed", y, "SpeedEnabled"); y = y + 35
+CreateToggle("Fly", y, "FlyEnabled"); y = y + 35
+CreateToggle("Noclip", y, "NoclipEnabled"); y = y + 35
+CreateToggle("Aimbot Master", y, "AimbotMaster", function(s) 
+    AimBtn.Visible = s 
+    if not s then ESP_Settings.AimbotActive = false end
+end); y = y + 35
 
--- --- CORE LOGIC (Movement & ESP) ---
+-- Mobile Aim Button Click
+AimBtn.MouseButton1Click:Connect(function()
+    ESP_Settings.AimbotActive = not ESP_Settings.AimbotActive
+    AimBtn.BackgroundColor3 = ESP_Settings.AimbotActive and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+    AimBtn.Text = ESP_Settings.AimbotActive and "ON" or "OFF"
+end)
+
+-- --- AIMBOT LOGIC (CENTER-SCREEN PRIORITY) ---
+local function GetClosestToCenter()
+    local Target = nil
+    local MaxDist = ESP_Settings.FOV_Radius
+    local Center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
+    for _, v in pairs(Players:GetPlayers()) do
+        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+            local Hum = v.Character:FindFirstChild("Humanoid")
+            if Hum and Hum.Health > 0 then
+                local ScreenPos, OnScreen = Camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+                if OnScreen then
+                    local MouseDist = (Vector2.new(ScreenPos.X, ScreenPos.Y) - Center).Magnitude
+                    if MouseDist < MaxDist then
+                        MaxDist = MouseDist
+                        Target = v
+                    end
+                end
+            end
+        end
+    end
+    return Target
+end
+
+-- --- UPDATE LOOPS ---
+RunService.RenderStepped:Connect(function(dt)
+    Hue = (Hue + dt * 0.2) % 1
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChild("Humanoid")
+    
+    if hrp and hum then
+        -- Speed/Fly
+        hum.WalkSpeed = ESP_Settings.SpeedEnabled and ESP_Settings.SpeedValue or 16
+        if ESP_Settings.FlyEnabled then
+            hum.PlatformStand = true
+            hrp.Velocity = (hum.MoveDirection * ESP_Settings.FlySpeed)
+        else
+            if hum.PlatformStand then hum.PlatformStand = false end
+        end
+
+        -- Aimbot (Facing Target Only)
+        if ESP_Settings.AimbotMaster and ESP_Settings.AimbotActive then
+            local Target = GetClosestToCenter()
+            if Target and Target.Character:FindFirstChild("HumanoidRootPart") then
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, Target.Character.HumanoidRootPart.Position)
+            end
+        end
+    end
+end)
+
+-- Noclip Heartbeat
+RunService.Heartbeat:Connect(function()
+    if ESP_Settings.NoclipEnabled and LocalPlayer.Character then
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then part.CanCollide = false end
+        end
+    end
+end)
+
+-- --- ESP LOGIC ---
 local function CreateESP(player)
     if player == LocalPlayer then return end
     local line = Drawing.new("Line")
-    line.Visible = false
     line.Thickness = 1
+    line.Visible = false
 
     local function setup(char)
         local root = char:WaitForChild("HumanoidRootPart", 10)
@@ -133,24 +220,21 @@ local function CreateESP(player)
                 gui:Destroy()
                 return
             end
-
             local vector, onScreen = Camera:WorldToViewportPoint(root.Position)
             local currentColor = Color3.fromHSV(Hue, 0.8, 1)
-
-            -- TRACER LOGIC: Set to Top Middle
+            
             if onScreen and ESP_Settings.Enabled and ESP_Settings.Tracers then
                 line.Color = currentColor
                 line.To = Vector2.new(vector.X, vector.Y)
-                line.From = Vector2.new(Camera.ViewportSize.X / 2, 0) -- This moves tracers to the top
+                line.From = Vector2.new(Camera.ViewportSize.X / 2, 0)
                 line.Visible = true
             else
                 line.Visible = false
             end
-
+            
             box.Visible = ESP_Settings.Enabled and ESP_Settings.Boxes
             box.Color3 = currentColor
             gui.Enabled = ESP_Settings.Enabled and ESP_Settings.Names
-            
             if gui.Enabled then
                 local dist = (root.Position - Camera.CFrame.Position).Magnitude
                 lbl.Text = string.format("%s\n%d HP\n[%d studs]", player.Name, math.floor(hum.Health), math.floor(dist))
@@ -158,43 +242,9 @@ local function CreateESP(player)
             end
         end)
     end
-
     player.CharacterAdded:Connect(setup)
     if player.Character then setup(player.Character) end
 end
-
--- Universal Loops
-RunService.Heartbeat:Connect(function(dt)
-    Hue = (Hue + dt * 0.2) % 1
-    
-    -- Noclip Heartbeat
-    if ESP_Settings.NoclipEnabled and LocalPlayer.Character then
-        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") then part.CanCollide = false end
-        end
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    local hum = char and char:FindFirstChild("Humanoid")
-    if not hrp or not hum then return end
-
-    -- Speed
-    hum.WalkSpeed = ESP_Settings.SpeedEnabled and ESP_Settings.SpeedValue or 16
-
-    -- Fly
-    if ESP_Settings.FlyEnabled then
-        hum.PlatformStand = true
-        local flyVec = Vector3.new(0, 0, 0)
-        if UserInputService:IsKeyDown(Enum.KeyCode.Q) then flyVec = flyVec - Vector3.new(0, 1, 0) end
-        if UserInputService:IsKeyDown(Enum.KeyCode.E) then flyVec = flyVec + Vector3.new(0, 1, 0) end
-        hrp.Velocity = (hum.MoveDirection * ESP_Settings.FlySpeed) + (flyVec * ESP_Settings.FlySpeed)
-    else
-        if hum.PlatformStand then hum.PlatformStand = false end
-    end
-end)
 
 Players.PlayerAdded:Connect(CreateESP)
 for _, p in pairs(Players:GetPlayers()) do CreateESP(p) end
