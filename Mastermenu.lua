@@ -1,4 +1,4 @@
--- --- MASTER MENU V4 (TOP TRACERS + CAM FLY + SPINBOT) ---
+-- --- MASTER MENU V4.2 (DISPLAY NAME UPDATE) ---
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -18,17 +18,17 @@ local ESP_Settings = {
     NoclipEnabled = false,
     AimbotMaster = false,
     AimbotActive = false,
-    SpinbotEnabled = false, -- Naya feature
+    SpinbotEnabled = false,
     SpeedValue = 300,
     FlySpeed = 300,
     FOV_Radius = 200,
-    SpinSpeed = 10 -- Spin ki raftaar
+    SpinSpeed = 15 
 }
 
 local Hue = 0
 local SpinAngle = 0
 
--- --- GUI ---
+-- --- GUI SETUP ---
 local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 ScreenGui.Name = "MasterMenu_Final_V4"
 ScreenGui.ResetOnSpawn = false
@@ -45,7 +45,7 @@ AimBtn.Active = true
 Instance.new("UICorner", AimBtn).CornerRadius = UDim.new(0, 10)
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 180, 0, 430) -- Size thoda badha diya toggle ke liye
+MainFrame.Size = UDim2.new(0, 180, 0, 430)
 MainFrame.Position = UDim2.new(0, 50, 0.3, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.Active = true
@@ -54,7 +54,7 @@ Instance.new("UICorner", MainFrame)
 
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, -35, 0, 35)
-Title.Text = "  MASTER MENU"
+Title.Text = "  MASTER MENU V4"
 Title.TextColor3 = Color3.new(1, 1, 1)
 Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -113,7 +113,7 @@ CreateToggle("Names", y, "Names"); y = y + 35
 CreateToggle("Speed hack", y, "SpeedEnabled"); y = y + 35
 CreateToggle("Fly (Cam Mode)", y, "FlyEnabled"); y = y + 35
 CreateToggle("Noclip", y, "NoclipEnabled"); y = y + 35
-CreateToggle("Spinbot", y, "SpinbotEnabled"); y = y + 35 -- New Toggle
+CreateToggle("Spinbot", y, "SpinbotEnabled"); y = y + 35
 CreateToggle("Aimbot Master", y, "AimbotMaster", function(s) 
     AimBtn.Visible = s 
     if not s then ESP_Settings.AimbotActive = false end
@@ -135,25 +135,22 @@ RunService.RenderStepped:Connect(function(dt)
     if hrp and hum then
         hum.WalkSpeed = ESP_Settings.SpeedEnabled and ESP_Settings.SpeedValue or 16
         
-        -- Fly Logic
         if ESP_Settings.FlyEnabled then
             hum.PlatformStand = true
             if hum.MoveDirection.Magnitude > 0 then
                 hrp.Velocity = Camera.CFrame.LookVector * ESP_Settings.FlySpeed
             else
-                hrp.Velocity = Vector3.new(0, 0, 0)
+                hrp.Velocity = Vector3.new(0, 0.1, 0)
             end
         else
             if hum.PlatformStand then hum.PlatformStand = false end
         end
 
-        -- Spinbot Logic
         if ESP_Settings.SpinbotEnabled then
-            SpinAngle = SpinAngle + ESP_Settings.SpinSpeed
-            hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(SpinAngle), 0)
+            SpinAngle = (SpinAngle + (ESP_Settings.SpinSpeed * dt * 100)) % 360
+            hrp.CFrame = CFrame.new(hrp.Position) * CFrame.Angles(0, math.rad(SpinAngle), 0)
         end
 
-        -- Aimbot Logic
         if ESP_Settings.AimbotMaster and ESP_Settings.AimbotActive then
             local Target = nil
             local MaxDist = ESP_Settings.FOV_Radius
@@ -161,8 +158,8 @@ RunService.RenderStepped:Connect(function(dt)
 
             for _, v in pairs(Players:GetPlayers()) do
                 if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-                    local h = v.Character:FindFirstChild("Humanoid")
-                    if h and h.Health > 0 then
+                    local targetHum = v.Character:FindFirstChild("Humanoid")
+                    if targetHum and targetHum.Health > 0 then
                         local ScreenPos, OnScreen = Camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
                         if OnScreen then
                             local MouseDist = (Vector2.new(ScreenPos.X, ScreenPos.Y) - Center).Magnitude
@@ -190,7 +187,7 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- --- ESP RENDERING (TOP SCREEN TRACERS) ---
+-- --- ESP RENDERING (DISPLAY NAME VERSION) ---
 local function CreateESP(player)
     if player == LocalPlayer then return end
     local line = Drawing.new("Line")
@@ -243,7 +240,8 @@ local function CreateESP(player)
             gui.Enabled = ESP_Settings.Enabled and ESP_Settings.Names
             if gui.Enabled then
                 local dist = (root.Position - Camera.CFrame.Position).Magnitude
-                lbl.Text = string.format("%s\n%d HP\n[%d studs]", player.Name, math.floor(hum.Health), math.floor(dist))
+                -- Yahan player.Name ki jagah player.DisplayName use kiya hai
+                lbl.Text = string.format("%s\n%d HP\n[%d studs]", player.DisplayName, math.floor(hum.Health), math.floor(dist))
                 lbl.TextColor3 = currentColor
             end
         end)
