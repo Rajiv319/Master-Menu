@@ -22,7 +22,7 @@ local ESP_Settings = {
     SpeedValue = 300,
     FlySpeed = 300,
     FOV_Radius = 200,
-    SpinSpeed = 0, -- Spin ki raftaar
+    SpinSpeed = 10 -- Spin ki raftaar
 }
 
 local Hue = 0
