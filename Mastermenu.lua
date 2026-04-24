@@ -1,4 +1,4 @@
--- --- MASTER MENU V4 (TOP TRACERS + CAM FLY) ---
+-- --- MASTER MENU V4 (TOP TRACERS + CAM FLY + SPINBOT) ---
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -18,12 +18,15 @@ local ESP_Settings = {
     NoclipEnabled = false,
     AimbotMaster = false,
     AimbotActive = false,
+    SpinbotEnabled = false, -- Naya feature
     SpeedValue = 300,
-    FlySpeed = 500,
-    FOV_Radius = 200 
+    FlySpeed = 300,
+    FOV_Radius = 200,
+    SpinSpeed = 25 -- Spin ki raftaar
 }
 
 local Hue = 0
+local SpinAngle = 0
 
 -- --- GUI ---
 local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
@@ -42,7 +45,7 @@ AimBtn.Active = true
 Instance.new("UICorner", AimBtn).CornerRadius = UDim.new(0, 10)
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 180, 0, 395)
+MainFrame.Size = UDim2.new(0, 180, 0, 430) -- Size thoda badha diya toggle ke liye
 MainFrame.Position = UDim2.new(0, 50, 0.3, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.Active = true
@@ -69,13 +72,13 @@ local Content = Instance.new("ScrollingFrame", MainFrame)
 Content.Size = UDim2.new(1, 0, 1, -40)
 Content.Position = UDim2.new(0, 0, 0, 40)
 Content.BackgroundTransparency = 1
-Content.CanvasSize = UDim2.new(0, 0, 0, 450)
+Content.CanvasSize = UDim2.new(0, 0, 0, 500)
 Content.ScrollBarThickness = 2
 
 MinBtn.MouseButton1Click:Connect(function()
     ESP_Settings.MenuOpen = not ESP_Settings.MenuOpen
     Content.Visible = ESP_Settings.MenuOpen
-    MainFrame.Size = ESP_Settings.MenuOpen and UDim2.new(0, 180, 0, 395) or UDim2.new(0, 180, 0, 35)
+    MainFrame.Size = ESP_Settings.MenuOpen and UDim2.new(0, 180, 0, 430) or UDim2.new(0, 180, 0, 35)
     MinBtn.Text = ESP_Settings.MenuOpen and "-" or "+"
 end)
 
@@ -110,6 +113,7 @@ CreateToggle("Names", y, "Names"); y = y + 35
 CreateToggle("Speed hack", y, "SpeedEnabled"); y = y + 35
 CreateToggle("Fly (Cam Mode)", y, "FlyEnabled"); y = y + 35
 CreateToggle("Noclip", y, "NoclipEnabled"); y = y + 35
+CreateToggle("Spinbot", y, "SpinbotEnabled"); y = y + 35 -- New Toggle
 CreateToggle("Aimbot Master", y, "AimbotMaster", function(s) 
     AimBtn.Visible = s 
     if not s then ESP_Settings.AimbotActive = false end
@@ -121,7 +125,7 @@ AimBtn.MouseButton1Click:Connect(function()
     AimBtn.Text = ESP_Settings.AimbotActive and "ON" or "OFF"
 end)
 
--- --- AIMBOT & FLY LOOPS ---
+-- --- MAIN LOOPS ---
 RunService.RenderStepped:Connect(function(dt)
     Hue = (Hue + dt * 0.2) % 1
     local char = LocalPlayer.Character
@@ -131,6 +135,7 @@ RunService.RenderStepped:Connect(function(dt)
     if hrp and hum then
         hum.WalkSpeed = ESP_Settings.SpeedEnabled and ESP_Settings.SpeedValue or 16
         
+        -- Fly Logic
         if ESP_Settings.FlyEnabled then
             hum.PlatformStand = true
             if hum.MoveDirection.Magnitude > 0 then
@@ -142,6 +147,13 @@ RunService.RenderStepped:Connect(function(dt)
             if hum.PlatformStand then hum.PlatformStand = false end
         end
 
+        -- Spinbot Logic
+        if ESP_Settings.SpinbotEnabled then
+            SpinAngle = SpinAngle + ESP_Settings.SpinSpeed
+            hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(SpinAngle), 0)
+        end
+
+        -- Aimbot Logic
         if ESP_Settings.AimbotMaster and ESP_Settings.AimbotActive then
             local Target = nil
             local MaxDist = ESP_Settings.FOV_Radius
@@ -231,8 +243,7 @@ local function CreateESP(player)
             gui.Enabled = ESP_Settings.Enabled and ESP_Settings.Names
             if gui.Enabled then
                 local dist = (root.Position - Camera.CFrame.Position).Magnitude
-                -- Changed to DisplayName here
-                lbl.Text = string.format("%s\n%d HP\n[%d studs]", player.DisplayName, math.floor(hum.Health), math.floor(dist))
+                lbl.Text = string.format("%s\n%d HP\n[%d studs]", player.Name, math.floor(hum.Health), math.floor(dist))
                 lbl.TextColor3 = currentColor
             end
         end)
