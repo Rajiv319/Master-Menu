@@ -20,13 +20,12 @@ local ESP_Settings = {
     AimbotActive = false,
     SpinbotEnabled = false,
     SpeedValue = 300,
-    FlySpeed = 300,
+    FlySpeed = 200,
     FOV_Radius = 200,
-    SpinSpeed = 15 
+    SpinSpeed = 30 -- Smooth rotation ke liye ideal speed
 }
 
 local Hue = 0
-local SpinAngle = 0
 
 -- --- GUI SETUP ---
 local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
@@ -54,7 +53,7 @@ Instance.new("UICorner", MainFrame)
 
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, -35, 0, 35)
-Title.Text = "  MASTER MENU V4"
+Title.Text = "  MASTER MENU V4.2"
 Title.TextColor3 = Color3.new(1, 1, 1)
 Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -125,6 +124,27 @@ AimBtn.MouseButton1Click:Connect(function()
     AimBtn.Text = ESP_Settings.AimbotActive and "ON" or "OFF"
 end)
 
+-- --- SPINBOT LOGIC (SMOOTH PHYSICS) ---
+local function UpdateSpinbot(hrp, enabled)
+    local bodyAngular = hrp:FindFirstChild("SpinbotVelocity")
+    if enabled then
+        if not bodyAngular then
+            bodyAngular = Instance.new("AngularVelocity")
+            bodyAngular.Name = "SpinbotVelocity"
+            bodyAngular.MaxTorque = math.huge
+            bodyAngular.RelativeTo = Enum.ActuatorRelativeTo.Attachment0
+            local att = Instance.new("Attachment", hrp)
+            att.Name = "SpinAttachment"
+            bodyAngular.Attachment0 = att
+            bodyAngular.Parent = hrp
+        end
+        bodyAngular.AngularVelocity = Vector3.new(0, ESP_Settings.SpinSpeed, 0)
+    else
+        if bodyAngular then bodyAngular:Destroy() end
+        if hrp:FindFirstChild("SpinAttachment") then hrp.SpinAttachment:Destroy() end
+    end
+end
+
 -- --- MAIN LOOPS ---
 RunService.RenderStepped:Connect(function(dt)
     Hue = (Hue + dt * 0.2) % 1
@@ -135,6 +155,9 @@ RunService.RenderStepped:Connect(function(dt)
     if hrp and hum then
         hum.WalkSpeed = ESP_Settings.SpeedEnabled and ESP_Settings.SpeedValue or 16
         
+        -- Smooth Spinbot Call
+        UpdateSpinbot(hrp, ESP_Settings.SpinbotEnabled)
+
         if ESP_Settings.FlyEnabled then
             hum.PlatformStand = true
             if hum.MoveDirection.Magnitude > 0 then
@@ -144,11 +167,6 @@ RunService.RenderStepped:Connect(function(dt)
             end
         else
             if hum.PlatformStand then hum.PlatformStand = false end
-        end
-
-        if ESP_Settings.SpinbotEnabled then
-            SpinAngle = (SpinAngle + (ESP_Settings.SpinSpeed * dt * 100)) % 360
-            hrp.CFrame = CFrame.new(hrp.Position) * CFrame.Angles(0, math.rad(SpinAngle), 0)
         end
 
         if ESP_Settings.AimbotMaster and ESP_Settings.AimbotActive then
@@ -240,7 +258,6 @@ local function CreateESP(player)
             gui.Enabled = ESP_Settings.Enabled and ESP_Settings.Names
             if gui.Enabled then
                 local dist = (root.Position - Camera.CFrame.Position).Magnitude
-                -- Yahan player.Name ki jagah player.DisplayName use kiya hai
                 lbl.Text = string.format("%s\n%d HP\n[%d studs]", player.DisplayName, math.floor(hum.Health), math.floor(dist))
                 lbl.TextColor3 = currentColor
             end
