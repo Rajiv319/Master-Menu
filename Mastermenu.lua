@@ -3,7 +3,6 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-local VirtualInputManager = game:GetService("VirtualInputManager") -- Added for AutoClicker
 
 -- --- CONFIG / KEY SYSTEM ---
 local CorrectKey = "BABA_TILLU26"
@@ -77,10 +76,9 @@ local function StartMainScript()
         AimbotMaster = false,
         AimbotActive = false,
         SpinbotEnabled = false,
-        AutoClickerEnabled = false, -- New
         SpeedValue = 300,
         FlySpeed = 200,
-        FOV_Radius = 250,
+        FOV_Radius = 200,
         SpinSpeed = 20
     }
 
@@ -130,7 +128,7 @@ local function StartMainScript()
     Content.Size = UDim2.new(1, 0, 1, -40)
     Content.Position = UDim2.new(0, 0, 0, 40)
     Content.BackgroundTransparency = 1
-    Content.CanvasSize = UDim2.new(0, 0, 0, 540) -- Increased size for new toggle
+    Content.CanvasSize = UDim2.new(0, 0, 0, 500)
     Content.ScrollBarThickness = 2
 
     MinBtn.MouseButton1Click:Connect(function()
@@ -172,7 +170,6 @@ local function StartMainScript()
     CreateToggle("Fly (Cam Mode)", y, "FlyEnabled"); y = y + 35
     CreateToggle("Noclip", y, "NoclipEnabled"); y = y + 35
     CreateToggle("Spinbot", y, "SpinbotEnabled"); y = y + 35
-    CreateToggle("Auto Clicker", y, "AutoClickerEnabled"); y = y + 35 -- New Toggle
     CreateToggle("Aimbot Master", y, "AimbotMaster", function(s) 
         AimBtn.Visible = s 
         if not s then ESP_Settings.AimbotActive = false end
@@ -204,17 +201,6 @@ local function StartMainScript()
             if hrp:FindFirstChild("SpinAttachment") then hrp.SpinAttachment:Destroy() end
         end
     end
-
-    -- --- AUTO CLICKER LOOP ---
-    task.spawn(function()
-        while task.wait() do
-            if ESP_Settings.AutoClickerEnabled then
-                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                task.wait(0.01) -- Super fast delay
-                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-            end
-        end
-    end)
 
     -- Main Loop
     RunService.RenderStepped:Connect(function(dt)
@@ -333,6 +319,7 @@ end
 
 -- --- FIXED KEY SYSTEM BUTTON ACTIONS ---
 SubmitBtn.MouseButton1Click:Connect(function()
+    -- Clean the text to remove hidden spaces or newlines from copy-pasting
     local CleanedInput = TextBox.Text:match("^%s*(.-)%s*$") 
     
     if CleanedInput == CorrectKey then
@@ -352,7 +339,7 @@ end)
 
 GetKeyBtn.MouseButton1Click:Connect(function()
     if setclipboard then
-        setclipboard("https://discord.gg/yourlink")
+        setclipboard("https://discord.gg/yourlink") -- Change your link here
         GetKeyBtn.Text = "Link Copied!"
     else
         GetKeyBtn.Text = "Copy Error"
