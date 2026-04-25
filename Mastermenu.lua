@@ -81,7 +81,7 @@ local function StartMainScript()
         SpeedValue = 300,
         FlySpeed = 200,
         FOV_Radius = 250,
-        SpinSpeed = 10
+        SpinSpeed = 20
     }
 
     local Hue = 0
