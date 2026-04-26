@@ -10,7 +10,7 @@ local KeyInput = ""
 
 -- --- KEY SYSTEM UI ---
 local KeyGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-KeyGui.Name = "BABA_TILLU_SYSTEM"
+KeyGui.Name = "TILLU_MODS_SYSTEM"
 
 local KeyFrame = Instance.new("Frame", KeyGui)
 KeyFrame.Size = UDim2.new(0, 300, 0, 200)
@@ -92,7 +92,6 @@ local function StartMainScript()
     ScreenGui.Name = "MasterMenu_Improved_V2"
     ScreenGui.ResetOnSpawn = false
 
-    -- Aimbot Floating Button
     local AimBtn = Instance.new("TextButton", ScreenGui)
     AimBtn.Size = UDim2.new(0, 50, 0, 50)
     AimBtn.Position = UDim2.new(0.8, 0, 0.4, 0)
@@ -239,7 +238,6 @@ local function StartMainScript()
                 if hum.PlatformStand then hum.PlatformStand = false end
             end
 
-            -- Aimbot Logic
             if ESP_Settings.AimbotMaster and ESP_Settings.AimbotActive then
                 local Target = nil
                 local MaxDist = ESP_Settings.FOV_Radius
@@ -325,8 +323,12 @@ local function StartMainScript()
                     if gui then gui:Destroy() end
                     return
                 end
+                
                 local vector, onScreen = Camera:WorldToViewportPoint(root.Position)
-                local espColor = Color3.new(0, 1, 0.5)
+                
+                -- --- RGB LOGIC ---
+                local hue = tick() % 5 / 5
+                local espColor = Color3.fromHSV(hue, 1, 1)
 
                 if onScreen and ESP_Settings.Enabled then
                     if ESP_Settings.Boxes then
@@ -350,6 +352,7 @@ local function StartMainScript()
                     line.Visible = false
                     box.Visible = false
                 end
+                
                 gui.Enabled = ESP_Settings.Enabled and ESP_Settings.Names
                 if gui.Enabled then
                     local dist = (root.Position - Camera.CFrame.Position).Magnitude
