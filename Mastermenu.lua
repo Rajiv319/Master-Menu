@@ -5,7 +5,7 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 -- --- CONFIG / KEY SYSTEM ---
-local CorrectKey = "BABA_TILLU26"
+local CorrectKey = "TILLU_MODS26"
 local KeyInput = ""
 
 -- --- KEY SYSTEM UI ---
@@ -18,7 +18,7 @@ KeyFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
 KeyFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 KeyFrame.Active = true
 KeyFrame.Draggable = true
-Instance.new("UICorner", KeyFrame)
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 8)
 
 local UIStroke = Instance.new("UIStroke", KeyFrame)
 UIStroke.Thickness = 2
@@ -26,12 +26,12 @@ UIStroke.Color = Color3.fromRGB(0, 150, 255)
 
 local KeyTitle = Instance.new("TextLabel", KeyFrame)
 KeyTitle.Size = UDim2.new(1, 0, 0, 40)
-KeyTitle.Text = "BABA TILLU MODS - VERIFY"
+KeyTitle.Text = "TILLU MODS - VERIFY"
 KeyTitle.TextColor3 = Color3.new(1, 1, 1)
 KeyTitle.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 KeyTitle.Font = Enum.Font.GothamBold
 KeyTitle.TextSize = 16
-Instance.new("UICorner", KeyTitle)
+Instance.new("UICorner", KeyTitle).CornerRadius = UDim.new(0, 8)
 
 local TextBox = Instance.new("TextBox", KeyFrame)
 TextBox.Size = UDim2.new(0.8, 0, 0, 40)
@@ -40,6 +40,8 @@ TextBox.PlaceholderText = "Enter Key Here..."
 TextBox.Text = ""
 TextBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 TextBox.TextColor3 = Color3.new(1, 1, 1)
+TextBox.Font = Enum.Font.SourceSans
+TextBox.TextSize = 16
 Instance.new("UICorner", TextBox)
 
 local SubmitBtn = Instance.new("TextButton", KeyFrame)
@@ -48,6 +50,8 @@ SubmitBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
 SubmitBtn.Text = "Submit"
 SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
 SubmitBtn.TextColor3 = Color3.new(1, 1, 1)
+SubmitBtn.Font = Enum.Font.GothamBold
+SubmitBtn.TextSize = 16
 Instance.new("UICorner", SubmitBtn)
 
 local GetKeyBtn = Instance.new("TextButton", KeyFrame)
@@ -56,39 +60,39 @@ GetKeyBtn.Position = UDim2.new(0.55, 0, 0.65, 0)
 GetKeyBtn.Text = "Get Key"
 GetKeyBtn.BackgroundColor3 = Color3.fromRGB(180, 180, 0)
 GetKeyBtn.TextColor3 = Color3.new(1, 1, 1)
+GetKeyBtn.Font = Enum.Font.GothamBold
+GetKeyBtn.TextSize = 16
 Instance.new("UICorner", GetKeyBtn)
 
 -- --- MAIN SCRIPT EXECUTION ---
 local function StartMainScript()
     KeyGui:Destroy()
     
-    -- --- CONFIG / STATE ---
     local ESP_Settings = {
         Enabled = true,
         Boxes = true,
         Tracers = true,
         Names = true,
-        RGB = true,
-        MenuOpen = true,
+        MenuOpen = true, 
         SpeedEnabled = false,
         FlyEnabled = false,
         NoclipEnabled = false,
         AimbotMaster = false,
         AimbotActive = false,
         SpinbotEnabled = false,
-        SpeedValue = 300,
+        SpeedValue = 100,
         FlySpeed = 200,
         FOV_Radius = 200,
-        SpinSpeed = 20
+        SpinSpeed = 50
     }
 
-    local Hue = 0
+    local MainColor = Color3.fromRGB(0, 150, 255) 
 
-    -- --- GUI SETUP ---
     local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-    ScreenGui.Name = "MasterMenu_Final_V4"
+    ScreenGui.Name = "MasterMenu_Improved_V2"
     ScreenGui.ResetOnSpawn = false
 
+    -- Aimbot Floating Button
     local AimBtn = Instance.new("TextButton", ScreenGui)
     AimBtn.Size = UDim2.new(0, 50, 0, 50)
     AimBtn.Position = UDim2.new(0.8, 0, 0.4, 0)
@@ -101,55 +105,94 @@ local function StartMainScript()
     Instance.new("UICorner", AimBtn).CornerRadius = UDim.new(0, 10)
 
     local MainFrame = Instance.new("Frame", ScreenGui)
-    MainFrame.Size = UDim2.new(0, 180, 0, 430)
-    MainFrame.Position = UDim2.new(0, 50, 0.3, 0)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    MainFrame.Size = UDim2.new(0, 220, 0, 450)
+    MainFrame.Position = UDim2.new(0, 20, 0.3, 0)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25) 
     MainFrame.Active = true
     MainFrame.Draggable = true
-    Instance.new("UICorner", MainFrame)
+    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 
-    local Title = Instance.new("TextLabel", MainFrame)
-    Title.Size = UDim2.new(1, -35, 0, 35)
-    Title.Text = "  MASTER MENU V4.2"
-    Title.TextColor3 = Color3.new(1, 1, 1)
-    Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    Instance.new("UICorner", Title)
+    local TitleBar = Instance.new("Frame", MainFrame)
+    TitleBar.Size = UDim2.new(1, 0, 0, 35)
+    TitleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    TitleBar.BorderSizePixel = 0
+    Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 10)
 
-    local MinBtn = Instance.new("TextButton", MainFrame)
-    MinBtn.Size = UDim2.new(0, 35, 0, 35)
-    MinBtn.Position = UDim2.new(1, -35, 0, 0)
+    local TitleLabel = Instance.new("TextLabel", TitleBar)
+    TitleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+    TitleLabel.Position = UDim2.new(0.05, 0, 0, 0)
+    TitleLabel.Text = "TILLU MODS"
+    TitleLabel.TextColor3 = Color3.new(1, 1, 1)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.TextSize = 16
+
+    local MinBtn = Instance.new("TextButton", TitleBar)
+    MinBtn.Size = UDim2.new(0, 30, 0, 30)
+    MinBtn.Position = UDim2.new(0.9, -15, 0.5, -15)
     MinBtn.Text = "-"
     MinBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     MinBtn.TextColor3 = Color3.new(1, 1, 1)
-    Instance.new("UICorner", MinBtn)
+    MinBtn.Font = Enum.Font.GothamBold
+    MinBtn.TextSize = 20
+    Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 6)
+
+    local Line = Instance.new("Frame", MainFrame)
+    Line.Size = UDim2.new(0.9, 0, 0, 2)
+    Line.Position = UDim2.new(0.05, 0, 0, 40)
+    Line.BackgroundColor3 = MainColor
+    Line.BorderSizePixel = 0
 
     local Content = Instance.new("ScrollingFrame", MainFrame)
-    Content.Size = UDim2.new(1, 0, 1, -40)
-    Content.Position = UDim2.new(0, 0, 0, 40)
+    Content.Size = UDim2.new(1, -20, 1, -55)
+    Content.Position = UDim2.new(0, 10, 0, 50)
     Content.BackgroundTransparency = 1
-    Content.CanvasSize = UDim2.new(0, 0, 0, 500)
-    Content.ScrollBarThickness = 2
+    Content.CanvasSize = UDim2.new(0, 0, 0, 750) 
+    Content.ScrollBarThickness = 3
+    Content.ScrollBarImageColor3 = MainColor
 
     MinBtn.MouseButton1Click:Connect(function()
         ESP_Settings.MenuOpen = not ESP_Settings.MenuOpen
         Content.Visible = ESP_Settings.MenuOpen
-        MainFrame.Size = ESP_Settings.MenuOpen and UDim2.new(0, 180, 0, 430) or UDim2.new(0, 180, 0, 35)
+        Line.Visible = ESP_Settings.MenuOpen
+        MainFrame:TweenSize(ESP_Settings.MenuOpen and UDim2.new(0, 220, 0, 450) or UDim2.new(0, 220, 0, 35), "Out", "Quad", 0.3, true)
         MinBtn.Text = ESP_Settings.MenuOpen and "-" or "+"
     end)
 
-    local function CreateToggle(name, pos, stateKey, callback)
-        local btn = Instance.new("TextButton", Content)
-        btn.Size = UDim2.new(0.9, 0, 0, 30)
-        btn.Position = UDim2.new(0.05, 0, 0, pos)
+    local function CreateControl(name, pos, stateKey, valueKey, callback)
+        local controlFrame = Instance.new("Frame", Content)
+        controlFrame.Size = UDim2.new(1, 0, 0, 35)
+        controlFrame.Position = UDim2.new(0, 0, 0, pos)
+        controlFrame.BackgroundTransparency = 1
+
+        local btn = Instance.new("TextButton", controlFrame)
+        btn.Size = valueKey and UDim2.new(0.65, 0, 1, 0) or UDim2.new(1, 0, 1, 0)
+        btn.Text = name
         btn.TextColor3 = Color3.new(1, 1, 1)
-        btn.Font = Enum.Font.SourceSansBold
-        btn.BorderSizePixel = 0
-        Instance.new("UICorner", btn)
+        btn.Font = Enum.Font.SourceSans
+        btn.TextSize = 15
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
         
+        if valueKey then
+            local valInput = Instance.new("TextBox", controlFrame)
+            valInput.Size = UDim2.new(0.3, 0, 1, 0)
+            valInput.Position = UDim2.new(0.7, 0, 0, 0)
+            valInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            valInput.TextColor3 = Color3.new(1, 1, 1)
+            valInput.Text = tostring(ESP_Settings[valueKey])
+            valInput.Font = Enum.Font.Code
+            valInput.TextSize = 14
+            Instance.new("UICorner", valInput).CornerRadius = UDim.new(0, 6)
+            valInput.FocusLost:Connect(function()
+                local num = tonumber(valInput.Text)
+                if num then ESP_Settings[valueKey] = num else valInput.Text = tostring(ESP_Settings[valueKey]) end
+            end)
+        end
+
         local function update()
-            btn.Text = name .. ": " .. (ESP_Settings[stateKey] and "ON" or "OFF")
-            btn.BackgroundColor3 = ESP_Settings[stateKey] and Color3.fromRGB(46, 204, 113) or Color3.fromRGB(231, 76, 60)
+            local isOn = ESP_Settings[stateKey]
+            btn.BackgroundColor3 = isOn and MainColor or Color3.fromRGB(50, 50, 50)
         end
         
         btn.MouseButton1Click:Connect(function()
@@ -160,20 +203,20 @@ local function StartMainScript()
         update()
     end
 
-    -- Layout
     local y = 0
-    CreateToggle("Master ESP", y, "Enabled"); y = y + 35
-    CreateToggle("Boxes", y, "Boxes"); y = y + 35
-    CreateToggle("Tracers", y, "Tracers"); y = y + 35
-    CreateToggle("Names", y, "Names"); y = y + 35
-    CreateToggle("Speed hack", y, "SpeedEnabled"); y = y + 35
-    CreateToggle("Fly (Cam Mode)", y, "FlyEnabled"); y = y + 35
-    CreateToggle("Noclip", y, "NoclipEnabled"); y = y + 35
-    CreateToggle("Spinbot", y, "SpinbotEnabled"); y = y + 35
-    CreateToggle("Aimbot Master", y, "AimbotMaster", function(s) 
+    CreateControl("Master ESP", y, "Enabled"); y = y + 40
+    CreateControl("Boxes", y, "Boxes"); y = y + 40
+    CreateControl("Tracers", y, "Tracers"); y = y + 40
+    CreateControl("Names", y, "Names"); y = y + 40
+    y = y + 20
+    CreateControl("Speed Hack", y, "SpeedEnabled", "SpeedValue"); y = y + 40
+    CreateControl("Fly (Cam Mode)", y, "FlyEnabled", "FlySpeed"); y = y + 40
+    CreateControl("Spinbot", y, "SpinbotEnabled", "SpinSpeed"); y = y + 40
+    CreateControl("Noclip", y, "NoclipEnabled"); y = y + 40
+    CreateControl("Aimbot Master", y, "AimbotMaster", nil, function(s) 
         AimBtn.Visible = s 
         if not s then ESP_Settings.AimbotActive = false end
-    end); y = y + 35
+    end); y = y + 40
 
     AimBtn.MouseButton1Click:Connect(function()
         ESP_Settings.AimbotActive = not ESP_Settings.AimbotActive
@@ -181,37 +224,13 @@ local function StartMainScript()
         AimBtn.Text = ESP_Settings.AimbotActive and "ON" or "OFF"
     end)
 
-    -- --- LOGIC FUNCTIONS ---
-    local function UpdateSpinbot(hrp, enabled)
-        local bodyAngular = hrp:FindFirstChild("SpinbotVelocity")
-        if enabled then
-            if not bodyAngular then
-                bodyAngular = Instance.new("AngularVelocity")
-                bodyAngular.Name = "SpinbotVelocity"
-                bodyAngular.MaxTorque = math.huge
-                bodyAngular.RelativeTo = Enum.ActuatorRelativeTo.Attachment0
-                local att = Instance.new("Attachment", hrp)
-                att.Name = "SpinAttachment"
-                bodyAngular.Attachment0 = att
-                bodyAngular.Parent = hrp
-            end
-            bodyAngular.AngularVelocity = Vector3.new(0, ESP_Settings.SpinSpeed, 0)
-        else
-            if bodyAngular then bodyAngular:Destroy() end
-            if hrp:FindFirstChild("SpinAttachment") then hrp.SpinAttachment:Destroy() end
-        end
-    end
-
-    -- Main Loop
     RunService.RenderStepped:Connect(function(dt)
-        Hue = (Hue + dt * 0.2) % 1
         local char = LocalPlayer.Character
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
         local hum = char and char:FindFirstChild("Humanoid")
         
         if hrp and hum then
             hum.WalkSpeed = ESP_Settings.SpeedEnabled and ESP_Settings.SpeedValue or 16
-            UpdateSpinbot(hrp, ESP_Settings.SpinbotEnabled)
 
             if ESP_Settings.FlyEnabled then
                 hum.PlatformStand = true
@@ -220,6 +239,7 @@ local function StartMainScript()
                 if hum.PlatformStand then hum.PlatformStand = false end
             end
 
+            -- Aimbot Logic
             if ESP_Settings.AimbotMaster and ESP_Settings.AimbotActive then
                 local Target = nil
                 local MaxDist = ESP_Settings.FOV_Radius
@@ -242,6 +262,24 @@ local function StartMainScript()
                 end
                 if Target then Camera.CFrame = CFrame.new(Camera.CFrame.Position, Target.Character.HumanoidRootPart.Position) end
             end
+
+            local bodyAngular = hrp:FindFirstChild("SpinbotVelocity")
+            if ESP_Settings.SpinbotEnabled then
+                if not bodyAngular then
+                    bodyAngular = Instance.new("AngularVelocity")
+                    bodyAngular.Name = "SpinbotVelocity"
+                    bodyAngular.MaxTorque = math.huge
+                    bodyAngular.RelativeTo = Enum.ActuatorRelativeTo.Attachment0
+                    local att = Instance.new("Attachment", hrp)
+                    att.Name = "SpinAttachment"
+                    bodyAngular.Attachment0 = att
+                    bodyAngular.Parent = hrp
+                end
+                bodyAngular.AngularVelocity = Vector3.new(0, ESP_Settings.SpinSpeed, 0)
+            else
+                if bodyAngular then bodyAngular:Destroy() end
+                if hrp:FindFirstChild("SpinAttachment") then hrp.SpinAttachment:Destroy() end
+            end
         end
     end)
 
@@ -253,59 +291,70 @@ local function StartMainScript()
         end
     end)
 
-    -- ESP Rendering
     local function CreateESP(player)
         if player == LocalPlayer then return end
         local line = Drawing.new("Line")
-        line.Thickness = 1
+        line.Thickness = 1.5 
         line.Visible = false
+        local box = Drawing.new("Square")
+        box.Thickness = 1.5
+        box.Filled = false
+        box.Visible = false
 
         local function setup(char)
             local root = char:WaitForChild("HumanoidRootPart", 10)
             local hum = char:WaitForChild("Humanoid", 10)
             if not root or not hum then return end
-
-            local box = Instance.new("BoxHandleAdornment", root)
-            box.Size = Vector3.new(4, 6, 2)
-            box.AlwaysOnTop = true
-            box.Adornee = root
-            box.Transparency = 0.5
-
             local gui = Instance.new("BillboardGui", root)
             gui.Size = UDim2.new(0, 150, 0, 60)
-            gui.StudsOffset = Vector3.new(0, 4, 0)
+            gui.StudsOffset = Vector3.new(0, 4.5, 0)
             gui.AlwaysOnTop = true
             local lbl = Instance.new("TextLabel", gui)
             lbl.Size = UDim2.new(1, 0, 1, 0)
             lbl.BackgroundTransparency = 1
-            lbl.TextStrokeTransparency = 0
+            lbl.TextStrokeTransparency = 0.5
             lbl.Font = Enum.Font.SourceSansBold
+            lbl.TextSize = 14
 
             local conn
             conn = RunService.RenderStepped:Connect(function()
                 if not char:IsDescendantOf(workspace) or hum.Health <= 0 then
                     line.Visible = false
+                    box.Visible = false
                     conn:Disconnect()
-                    gui:Destroy()
+                    if gui then gui:Destroy() end
                     return
                 end
                 local vector, onScreen = Camera:WorldToViewportPoint(root.Position)
-                local currentColor = Color3.fromHSV(Hue, 0.8, 1)
-                
-                if onScreen and ESP_Settings.Enabled and ESP_Settings.Tracers then
-                    line.Color = currentColor
-                    line.To = Vector2.new(vector.X, vector.Y)
-                    line.From = Vector2.new(Camera.ViewportSize.X / 2, 0) 
-                    line.Visible = true
-                else line.Visible = false end
-                
-                box.Visible = ESP_Settings.Enabled and ESP_Settings.Boxes
-                box.Color3 = currentColor
+                local espColor = Color3.new(0, 1, 0.5)
+
+                if onScreen and ESP_Settings.Enabled then
+                    if ESP_Settings.Boxes then
+                        local top = Camera:WorldToViewportPoint(root.Position + Vector3.new(0, 3.5, 0))
+                        local bottom = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 4, 0))
+                        local height = math.abs(top.Y - bottom.Y)
+                        local width = height / 1.5
+                        box.Size = Vector2.new(width, height)
+                        box.Position = Vector2.new(vector.X - width/2, vector.Y - height/2)
+                        box.Color = espColor
+                        box.Visible = true
+                    else box.Visible = false end
+
+                    if ESP_Settings.Tracers then
+                        line.Color = espColor
+                        line.To = Vector2.new(vector.X, vector.Y)
+                        line.From = Vector2.new(Camera.ViewportSize.X / 2, 0) 
+                        line.Visible = true
+                    else line.Visible = false end
+                else
+                    line.Visible = false
+                    box.Visible = false
+                end
                 gui.Enabled = ESP_Settings.Enabled and ESP_Settings.Names
                 if gui.Enabled then
                     local dist = (root.Position - Camera.CFrame.Position).Magnitude
                     lbl.Text = string.format("%s\n%d HP\n[%d studs]", player.DisplayName, math.floor(hum.Health), math.floor(dist))
-                    lbl.TextColor3 = currentColor
+                    lbl.TextColor3 = espColor
                 end
             end)
         end
@@ -317,33 +366,18 @@ local function StartMainScript()
     Players.PlayerAdded:Connect(CreateESP)
 end
 
--- --- FIXED KEY SYSTEM BUTTON ACTIONS ---
 SubmitBtn.MouseButton1Click:Connect(function()
-    -- Clean the text to remove hidden spaces or newlines from copy-pasting
-    local CleanedInput = TextBox.Text:match("^%s*(.-)%s*$") 
-    
-    if CleanedInput == CorrectKey then
-        SubmitBtn.Text = "SUCCESS!"
-        SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-        task.wait(0.5)
+    if TextBox.Text == CorrectKey then
         StartMainScript()
     else
         TextBox.Text = ""
         TextBox.PlaceholderText = "WRONG KEY!"
-        SubmitBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-        task.wait(1)
-        SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
-        TextBox.PlaceholderText = "Enter Key Here..."
     end
 end)
 
 GetKeyBtn.MouseButton1Click:Connect(function()
-    if setclipboard then
-        setclipboard("https://discord.gg/yourlink") -- Change your link here
-        GetKeyBtn.Text = "Link Copied!"
-    else
-        GetKeyBtn.Text = "Copy Error"
-    end
+    if setclipboard then setclipboard("https://discord.gg/yourlink") end
+    GetKeyBtn.Text = "Copied!"
     task.wait(2)
     GetKeyBtn.Text = "Get Key"
 end)
