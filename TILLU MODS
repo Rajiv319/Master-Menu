@@ -1,12 +1,13 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local GuiService = game:GetService("GuiService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 -- --- CONFIG / KEY SYSTEM ---
 local CorrectKey = "TILLU_MODS26"
-local KeyInput = ""
+local DiscordLink = "https://discord.gg/7GcAEveMh"
 
 -- --- KEY SYSTEM UI ---
 local KeyGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
@@ -63,6 +64,21 @@ GetKeyBtn.TextColor3 = Color3.new(1, 1, 1)
 GetKeyBtn.Font = Enum.Font.GothamBold
 GetKeyBtn.TextSize = 16
 Instance.new("UICorner", GetKeyBtn)
+
+-- --- UPDATED GET KEY FUNCTION ---
+GetKeyBtn.MouseButton1Click:Connect(function()
+    -- Copy to clipboard
+    if setclipboard then
+        setclipboard(DiscordLink)
+        GetKeyBtn.Text = "COPIED!"
+        task.wait(1.5)
+        GetKeyBtn.Text = "Get Key"
+    end
+    -- Try to open browser
+    pcall(function()
+        GuiService:OpenBrowserWindow(DiscordLink)
+    end)
+end)
 
 -- --- MAIN SCRIPT EXECUTION ---
 local function StartMainScript()
@@ -326,7 +342,6 @@ local function StartMainScript()
                 
                 local vector, onScreen = Camera:WorldToViewportPoint(root.Position)
                 
-                -- --- RGB LOGIC ---
                 local hue = tick() % 5 / 5
                 local espColor = Color3.fromHSV(hue, 1, 1)
 
@@ -345,6 +360,7 @@ local function StartMainScript()
                     if ESP_Settings.Tracers then
                         line.Color = espColor
                         line.To = Vector2.new(vector.X, vector.Y)
+                        -- --- TOP CENTER TRACERS ---
                         line.From = Vector2.new(Camera.ViewportSize.X / 2, 0) 
                         line.Visible = true
                     else line.Visible = false end
