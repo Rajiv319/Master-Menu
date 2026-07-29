@@ -1,17 +1,96 @@
+--[[
+    TILLU MODS - PROTECTED SOURCE
+    Status: Encrypted & Obfuscated
+--]]
+
+local function _0xD(b)
+    local s = ""
+    for i = 1, #b do
+        s = s .. string.char(b[i])
+    end
+    return s
+end
+
+-- Encrypted Config Block
+local _0xC = {
+    _n = _0xD({77,97,115,116,101,114,32,77,101,110,117}),
+    _o = _0xD({111,84,119,118,73,72,66,116,75,74}),
+    _s = _0xD({55,50,52,57,50,56,51,50,99,102,101,49,48,51,48,98,56,48,48,99,99,54,99,101,100,102,48,55,56,49,49,101,57,53,100,100,102,99,99,57,49,56,54,49,49,51,48,50,54,53,52,55,50,51,97,55,57,56,52,50,102,101,49}),
+    _v = _0xD({49,46,48})
+}
+
+local KeyAuthApp = {
+    name = _0xC._n,
+    ownerid = _0xC._o,
+    secret = _0xC._s,
+    version = _0xC._v
+}
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local GuiService = game:GetService("GuiService")
+local HttpService = game:GetService("HttpService")
+
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local SessionID = nil
 
--- --- CONFIG / KEY SYSTEM ---
-local CorrectKey = "TILLU_MODS26"
-local DiscordLink = "https://discord.gg/7GcAEveMh"
+local function HttpRequest(_0xA)
+    local _R = (syn and syn.request) or (http and http.request) or http_request or request
+    if _R then return _R(_0xA) end
+    return nil
+end
 
--- --- KEY SYSTEM UI ---
+local function InitKeyAuth()
+    local hwid = game:GetService("RbxAnalyticsService"):GetClientId()
+    local success, response = pcall(function()
+        local res = HttpRequest({
+            Url = _0xD({104,116,116,112,115,58,47,47,107,101,121,97,117,116,104,46,119,105,110,47,97,112,105,47,49,46,50,47}),
+            Method = _0xD({80,79,83,84}),
+            Headers = {["Content-Type"] = _0xD({97,112,112,108,105,99,97,116,105,111,110,47,120,45,119,119,119,45,102,111,114,109,45,117,114,108,101,110,99,111,100,101,100})},
+            Body = "type=init&name=" .. KeyAuthApp.name .. "&ownerid=" .. KeyAuthApp.ownerid .. "&secret=" .. KeyAuthApp.secret .. "&version=" .. KeyAuthApp.version
+        })
+        if res and res.Body then return HttpService:JSONDecode(res.Body) end
+    end)
+
+    if success and response and response.success then
+        SessionID = response.sessionid
+        return true
+    else
+        warn(_0xD({75,101,121,65,117,116,104,32,70,97,105,108,101,100,58,32}) .. tostring(response and response.message or "Error"))
+        return false
+    end
+end
+
+local function VerifyKeyAuth(_0xK)
+    if not SessionID then
+        local inited = InitKeyAuth()
+        if not inited then return false, _0xD({83,101,115,115,105,111,110,32,73,110,105,116,32,70,97,105,108,101,100,33}) end
+    end
+
+    local hwid = game:GetService("RbxAnalyticsService"):GetClientId()
+    local success, response = pcall(function()
+        local res = HttpRequest({
+            Url = _0xD({104,116,116,112,115,58,47,47,107,101,121,97,117,116,104,46,119,105,110,47,97,112,105,47,49,46,50,47}),
+            Method = _0xD({80,79,83,84}),
+            Headers = {["Content-Type"] = _0xD({97,112,112,108,105,99,97,116,105,111,110,47,120,45,119,119,119,45,102,111,114,109,45,117,114,108,101,110,99,111,100,101,100})},
+            Body = "type=license&key=" .. _0xK .. "&hwid=" .. hwid .. "&sessionid=" .. SessionID .. "&name=" .. KeyAuthApp.name .. "&ownerid=" .. KeyAuthApp.ownerid
+        })
+        if res and res.Body then return HttpService:JSONDecode(res.Body) end
+    end)
+
+    if success and response then
+        return response.success, response.message
+    else
+        return false, _0xD({67,111,110,110,101,99,116,105,111,110,32,69,114,114,111,114,33})
+    end
+end
+
+task.spawn(InitKeyAuth)
+
 local KeyGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-KeyGui.Name = "TILLU_MODS_SYSTEM"
+KeyGui.Name = _0xD({84,73,76,76,85,95,77,79,68,83,95,83,89,83,84,69,77})
 
 local KeyFrame = Instance.new("Frame", KeyGui)
 KeyFrame.Size = UDim2.new(0, 300, 0, 200)
@@ -27,7 +106,7 @@ UIStroke.Color = Color3.fromRGB(0, 150, 255)
 
 local KeyTitle = Instance.new("TextLabel", KeyFrame)
 KeyTitle.Size = UDim2.new(1, 0, 0, 40)
-KeyTitle.Text = "TILLU MODS - VERIFY"
+KeyTitle.Text = _0xD({84,73,76,76,85,32,77,79,68,83,32,45,32,75,69,89,65,85,84,72})
 KeyTitle.TextColor3 = Color3.new(1, 1, 1)
 KeyTitle.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 KeyTitle.Font = Enum.Font.GothamBold
@@ -37,7 +116,7 @@ Instance.new("UICorner", KeyTitle).CornerRadius = UDim.new(0, 8)
 local TextBox = Instance.new("TextBox", KeyFrame)
 TextBox.Size = UDim2.new(0.8, 0, 0, 40)
 TextBox.Position = UDim2.new(0.1, 0, 0.35, 0)
-TextBox.PlaceholderText = "Enter Key Here..."
+TextBox.PlaceholderText = _0xD({69,110,116,101,114,32,75,101,121,32,72,101,114,101,46,46,46})
 TextBox.Text = ""
 TextBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 TextBox.TextColor3 = Color3.new(1, 1, 1)
@@ -48,7 +127,7 @@ Instance.new("UICorner", TextBox)
 local SubmitBtn = Instance.new("TextButton", KeyFrame)
 SubmitBtn.Size = UDim2.new(0.35, 0, 0, 40)
 SubmitBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
-SubmitBtn.Text = "Submit"
+SubmitBtn.Text = _0xD({83,117,98,109,105,116})
 SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
 SubmitBtn.TextColor3 = Color3.new(1, 1, 1)
 SubmitBtn.Font = Enum.Font.GothamBold
@@ -58,54 +137,38 @@ Instance.new("UICorner", SubmitBtn)
 local GetKeyBtn = Instance.new("TextButton", KeyFrame)
 GetKeyBtn.Size = UDim2.new(0.35, 0, 0, 40)
 GetKeyBtn.Position = UDim2.new(0.55, 0, 0.65, 0)
-GetKeyBtn.Text = "Get Key"
+GetKeyBtn.Text = _0xD({71,101,116,32,75,101,121})
 GetKeyBtn.BackgroundColor3 = Color3.fromRGB(180, 180, 0)
 GetKeyBtn.TextColor3 = Color3.new(1, 1, 1)
 GetKeyBtn.Font = Enum.Font.GothamBold
 GetKeyBtn.TextSize = 16
 Instance.new("UICorner", GetKeyBtn)
 
--- --- UPDATED GET KEY FUNCTION ---
 GetKeyBtn.MouseButton1Click:Connect(function()
-    -- Copy to clipboard
+    local DiscordLink = _0xD({104,116,116,112,115,58,47,47,100,105,115,99,111,114,100,46,103,103,47,55,71,99,65,69,118,101,77,104})
     if setclipboard then
         setclipboard(DiscordLink)
         GetKeyBtn.Text = "COPIED!"
         task.wait(1.5)
-        GetKeyBtn.Text = "Get Key"
+        GetKeyBtn.Text = _0xD({71,101,116,32,75,101,121})
     end
-    -- Try to open browser
-    pcall(function()
-        GuiService:OpenBrowserWindow(DiscordLink)
-    end)
+    pcall(function() GuiService:OpenBrowserWindow(DiscordLink) end)
 end)
 
--- --- MAIN SCRIPT EXECUTION ---
 local function StartMainScript()
     KeyGui:Destroy()
     
     local ESP_Settings = {
-        Enabled = true,
-        Boxes = true,
-        Tracers = true,
-        Names = true,
-        MenuOpen = true, 
-        SpeedEnabled = false,
-        FlyEnabled = false,
-        NoclipEnabled = false,
-        AimbotMaster = false,
-        AimbotActive = false,
-        SpinbotEnabled = false,
-        SpeedValue = 100,
-        FlySpeed = 200,
-        FOV_Radius = 200,
-        SpinSpeed = 50
+        Enabled = true, Boxes = true, Tracers = true, Names = true,
+        MenuOpen = true, SpeedEnabled = false, FlyEnabled = false,
+        NoclipEnabled = false, AimbotMaster = false, AimbotActive = false,
+        SpinbotEnabled = false, SpeedValue = 100, FlySpeed = 200,
+        FOV_Radius = 200, SpinSpeed = 50
     }
 
     local MainColor = Color3.fromRGB(0, 150, 255) 
-
     local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-    ScreenGui.Name = "MasterMenu_Improved_V2"
+    ScreenGui.Name = "MasterMenu_Protected"
     ScreenGui.ResetOnSpawn = false
 
     local AimBtn = Instance.new("TextButton", ScreenGui)
@@ -136,7 +199,7 @@ local function StartMainScript()
     local TitleLabel = Instance.new("TextLabel", TitleBar)
     TitleLabel.Size = UDim2.new(0.7, 0, 1, 0)
     TitleLabel.Position = UDim2.new(0.05, 0, 0, 0)
-    TitleLabel.Text = "TILLU MODS"
+    TitleLabel.Text = _0xD({77,65,83,84,69,82,32,77,69,78,85})
     TitleLabel.TextColor3 = Color3.new(1, 1, 1)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Font = Enum.Font.GothamBold
@@ -239,7 +302,7 @@ local function StartMainScript()
         AimBtn.Text = ESP_Settings.AimbotActive and "ON" or "OFF"
     end)
 
-    RunService.RenderStepped:Connect(function(dt)
+    RunService.RenderStepped:Connect(function()
         local char = LocalPlayer.Character
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
         local hum = char and char:FindFirstChild("Humanoid")
@@ -341,7 +404,6 @@ local function StartMainScript()
                 end
                 
                 local vector, onScreen = Camera:WorldToViewportPoint(root.Position)
-                
                 local hue = tick() % 5 / 5
                 local espColor = Color3.fromHSV(hue, 1, 1)
 
@@ -360,7 +422,6 @@ local function StartMainScript()
                     if ESP_Settings.Tracers then
                         line.Color = espColor
                         line.To = Vector2.new(vector.X, vector.Y)
-                        -- --- TOP CENTER TRACERS ---
                         line.From = Vector2.new(Camera.ViewportSize.X / 2, 0) 
                         line.Visible = true
                     else line.Visible = false end
@@ -386,10 +447,24 @@ local function StartMainScript()
 end
 
 SubmitBtn.MouseButton1Click:Connect(function()
-    if TextBox.Text == CorrectKey then
-        StartMainScript()
-    else
-        TextBox.Text = ""
-        TextBox.PlaceholderText = "WRONG KEY!"
+    local userKey = TextBox.Text
+    if userKey == "" then
+        TextBox.PlaceholderText = _0xD({69,110,116,101,114,32,107,101,121,32,102,105,114,115,116,33})
+        return
     end
+    
+    SubmitBtn.Text = _0xD({67,104,101,99,107,105,110,103,46,46,46})
+    
+    task.spawn(function()
+        local isValid, message = VerifyKeyAuth(userKey)
+        if isValid then
+            SubmitBtn.Text = "Success!"
+            task.wait(0.5)
+            StartMainScript()
+        else
+            TextBox.Text = ""
+            TextBox.PlaceholderText = message or "INVALID KEY!"
+            SubmitBtn.Text = _0xD({83,117,98,109,105,116})
+        end
+    end)
 end)
