@@ -1,163 +1,128 @@
---[[
-    TILLU MODS - PROTECTED SOURCE
-    Status: Encrypted & Obfuscated
---]]
+-- [[ TILLU MODS - ENCRYPTED KEYAUTH AUTO-RETRY SCRIPT ]] --
 
-local function _0xD(b)
-    local s = ""
-    for i = 1, #b do
-        s = s .. string.char(b[i])
+-- Byte Decoder
+local function _dec(bytes)
+    local str = ""
+    for i = 1, #bytes do
+        str = str .. string.char(bytes[i])
     end
-    return s
+    return str
 end
 
--- Encrypted Config Block
-local _0xC = {
-    _n = _0xD({77,97,115,116,101,114,32,77,101,110,117}),
-    _o = _0xD({111,84,119,118,73,72,66,116,75,74}),
-    _s = _0xD({55,50,52,57,50,56,51,50,99,102,101,49,48,51,48,98,56,48,48,99,99,54,99,101,100,102,48,55,56,49,49,101,57,53,100,100,102,99,99,57,49,56,54,49,49,51,48,50,54,53,52,55,50,51,97,55,57,56,52,50,102,101,49}),
-    _v = _0xD({49,46,48})
-}
-
+-- KeyAuth Credentials
 local KeyAuthApp = {
-    name = _0xC._n,
-    ownerid = _0xC._o,
-    secret = _0xC._s,
-    version = _0xC._v
+    name = "Rajivmehta18jmd's Application",
+    ownerid = "zXyYo4Nj4S",
+    secret = "00907f93b33c5f76a9826405f2fbd95e17073155a2e413f5314150a5b0acc84c",
+    version = "1.0"
 }
 
+-- Encrypted API Endpoints & Links
+local API_ENDPOINTS = {
+    _dec({104, 116, 116, 112, 115, 58, 47, 47, 107, 101, 121, 97, 117, 116, 104, 46, 99, 99, 47, 97, 112, 105, 47, 49, 46, 50, 47}), -- keyauth.cc
+    _dec({104, 116, 116, 112, 115, 58, 47, 47, 107, 101, 121, 97, 117, 116, 104, 46, 119, 105, 110, 47, 97, 112, 105, 47, 49, 46, 50, 47})  -- keyauth.win
+}
+
+local _DISCORD = _dec({104, 116, 116, 112, 115, 58, 47, 47, 100, 105, 115, 99, 111, 114, 100, 46, 103, 103, 47, 55, 71, 99, 65, 69, 118, 101, 77, 104})
+
+-- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local GuiService = game:GetService("GuiService")
 local HttpService = game:GetService("HttpService")
 
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-local SessionID = nil
+local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
+local Camera = workspace.CurrentCamera or workspace:WaitForChild("CurrentCamera")
 
-local function HttpRequest(_0xA)
-    local _R = (syn and syn.request) or (http and http.request) or http_request or request
-    if _R then return _R(_0xA) end
+-- Clean HWID Generator
+local function GetCleanHWID()
+    return "TILLU_USER_" .. tostring(LocalPlayer.UserId)
+end
+
+-- Universal UI Safe Parent
+local function GetUIParent()
+    if gethui then return gethui() end
+    local s, core = pcall(function() return game:GetService("CoreGui") end)
+    if s and core then return core end
+    return LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- Universal HTTP Request
+local function HttpRequest(options)
+    local req = (syn and syn.request) or (http and http.request) or http_request or request or (fluxus and fluxus.request)
+    if req then return req(options) end
     return nil
 end
 
-local function InitKeyAuth()
-    local hwid = game:GetService("RbxAnalyticsService"):GetClientId()
-    local success, response = pcall(function()
-        local res = HttpRequest({
-            Url = _0xD({104,116,116,112,115,58,47,47,107,101,121,97,117,116,104,46,119,105,110,47,97,112,105,47,49,46,50,47}),
-            Method = _0xD({80,79,83,84}),
-            Headers = {["Content-Type"] = _0xD({97,112,112,108,105,99,97,116,105,111,110,47,120,45,119,119,119,45,102,111,114,109,45,117,114,108,101,110,99,111,100,101,100})},
-            Body = "type=init&name=" .. KeyAuthApp.name .. "&ownerid=" .. KeyAuthApp.ownerid .. "&secret=" .. KeyAuthApp.secret .. "&version=" .. KeyAuthApp.version
-        })
-        if res and res.Body then return HttpService:JSONDecode(res.Body) end
-    end)
+local SessionID = nil
+local ActiveEndpoint = API_ENDPOINTS[1]
 
-    if success and response and response.success then
-        SessionID = response.sessionid
-        return true
-    else
-        warn(_0xD({75,101,121,65,117,116,104,32,70,97,105,108,101,100,58,32}) .. tostring(response and response.message or "Error"))
-        return false
+-- KeyAuth Init with Fallback
+local function InitKeyAuth()
+    local bodyData = "type=init&name=" .. HttpService:UrlEncode(KeyAuthApp.name) .. "&ownerid=" .. HttpService:UrlEncode(KeyAuthApp.ownerid) .. "&secret=" .. HttpService:UrlEncode(KeyAuthApp.secret) .. "&version=" .. HttpService:UrlEncode(KeyAuthApp.version)
+    
+    local lastError = "Connection Failed!"
+    
+    for _, url in ipairs(API_ENDPOINTS) do
+        local s, res = pcall(function()
+            return HttpRequest({
+                Url = url,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/x-www-form-urlencoded"},
+                Body = bodyData
+            })
+        end)
+        
+        if s and res and res.Body then
+            local decodeOk, data = pcall(function() return HttpService:JSONDecode(res.Body) end)
+            if decodeOk and data then
+                if data.success then
+                    SessionID = data.sessionid
+                    ActiveEndpoint = url
+                    return true, "Success"
+                else
+                    lastError = data.message or "Init Failed!"
+                end
+            end
+        end
     end
+    return false, lastError
 end
 
-local function VerifyKeyAuth(_0xK)
-    if not SessionID then
-        local inited = InitKeyAuth()
-        if not inited then return false, _0xD({83,101,115,115,105,111,110,32,73,110,105,116,32,70,97,105,108,101,100,33}) end
+-- Key Verification
+local function VerifyKey(key)
+    if not SessionID then 
+        local initOk, initErr = InitKeyAuth()
+        if not initOk then
+            return false, initErr
+        end
     end
-
-    local hwid = game:GetService("RbxAnalyticsService"):GetClientId()
-    local success, response = pcall(function()
-        local res = HttpRequest({
-            Url = _0xD({104,116,116,112,115,58,47,47,107,101,121,97,117,116,104,46,119,105,110,47,97,112,105,47,49,46,50,47}),
-            Method = _0xD({80,79,83,84}),
-            Headers = {["Content-Type"] = _0xD({97,112,112,108,105,99,97,116,105,111,110,47,120,45,119,119,119,45,102,111,114,109,45,117,114,108,101,110,99,111,100,101,100})},
-            Body = "type=license&key=" .. _0xK .. "&hwid=" .. hwid .. "&sessionid=" .. SessionID .. "&name=" .. KeyAuthApp.name .. "&ownerid=" .. KeyAuthApp.ownerid
+    
+    local hwid = GetCleanHWID()
+    local bodyData = "type=license&key=" .. HttpService:UrlEncode(key) .. "&hwid=" .. HttpService:UrlEncode(hwid) .. "&sessionid=" .. HttpService:UrlEncode(SessionID or "") .. "&name=" .. HttpService:UrlEncode(KeyAuthApp.name) .. "&ownerid=" .. HttpService:UrlEncode(KeyAuthApp.ownerid)
+    
+    local s, res = pcall(function()
+        return HttpRequest({
+            Url = ActiveEndpoint,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/x-www-form-urlencoded"},
+            Body = bodyData
         })
-        if res and res.Body then return HttpService:JSONDecode(res.Body) end
     end)
-
-    if success and response then
-        return response.success, response.message
-    else
-        return false, _0xD({67,111,110,110,101,99,116,105,111,110,32,69,114,114,111,114,33})
+    
+    if s and res and res.Body then
+        local decodeOk, data = pcall(function() return HttpService:JSONDecode(res.Body) end)
+        if decodeOk and data then
+            return data.success, data.message
+        end
     end
+    return false, "HTTP Request Failed!"
 end
 
 task.spawn(InitKeyAuth)
 
-local KeyGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-KeyGui.Name = _0xD({84,73,76,76,85,95,77,79,68,83,95,83,89,83,84,69,77})
-
-local KeyFrame = Instance.new("Frame", KeyGui)
-KeyFrame.Size = UDim2.new(0, 300, 0, 200)
-KeyFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
-KeyFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-KeyFrame.Active = true
-KeyFrame.Draggable = true
-Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 8)
-
-local UIStroke = Instance.new("UIStroke", KeyFrame)
-UIStroke.Thickness = 2
-UIStroke.Color = Color3.fromRGB(0, 150, 255)
-
-local KeyTitle = Instance.new("TextLabel", KeyFrame)
-KeyTitle.Size = UDim2.new(1, 0, 0, 40)
-KeyTitle.Text = _0xD({84,73,76,76,85,32,77,79,68,83,32,45,32,75,69,89,65,85,84,72})
-KeyTitle.TextColor3 = Color3.new(1, 1, 1)
-KeyTitle.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-KeyTitle.Font = Enum.Font.GothamBold
-KeyTitle.TextSize = 16
-Instance.new("UICorner", KeyTitle).CornerRadius = UDim.new(0, 8)
-
-local TextBox = Instance.new("TextBox", KeyFrame)
-TextBox.Size = UDim2.new(0.8, 0, 0, 40)
-TextBox.Position = UDim2.new(0.1, 0, 0.35, 0)
-TextBox.PlaceholderText = _0xD({69,110,116,101,114,32,75,101,121,32,72,101,114,101,46,46,46})
-TextBox.Text = ""
-TextBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-TextBox.TextColor3 = Color3.new(1, 1, 1)
-TextBox.Font = Enum.Font.SourceSans
-TextBox.TextSize = 16
-Instance.new("UICorner", TextBox)
-
-local SubmitBtn = Instance.new("TextButton", KeyFrame)
-SubmitBtn.Size = UDim2.new(0.35, 0, 0, 40)
-SubmitBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
-SubmitBtn.Text = _0xD({83,117,98,109,105,116})
-SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
-SubmitBtn.TextColor3 = Color3.new(1, 1, 1)
-SubmitBtn.Font = Enum.Font.GothamBold
-SubmitBtn.TextSize = 16
-Instance.new("UICorner", SubmitBtn)
-
-local GetKeyBtn = Instance.new("TextButton", KeyFrame)
-GetKeyBtn.Size = UDim2.new(0.35, 0, 0, 40)
-GetKeyBtn.Position = UDim2.new(0.55, 0, 0.65, 0)
-GetKeyBtn.Text = _0xD({71,101,116,32,75,101,121})
-GetKeyBtn.BackgroundColor3 = Color3.fromRGB(180, 180, 0)
-GetKeyBtn.TextColor3 = Color3.new(1, 1, 1)
-GetKeyBtn.Font = Enum.Font.GothamBold
-GetKeyBtn.TextSize = 16
-Instance.new("UICorner", GetKeyBtn)
-
-GetKeyBtn.MouseButton1Click:Connect(function()
-    local DiscordLink = _0xD({104,116,116,112,115,58,47,47,100,105,115,99,111,114,100,46,103,103,47,55,71,99,65,69,118,101,77,104})
-    if setclipboard then
-        setclipboard(DiscordLink)
-        GetKeyBtn.Text = "COPIED!"
-        task.wait(1.5)
-        GetKeyBtn.Text = _0xD({71,101,116,32,75,101,121})
-    end
-    pcall(function() GuiService:OpenBrowserWindow(DiscordLink) end)
-end)
-
-local function StartMainScript()
-    KeyGui:Destroy()
-    
+-- --- MAIN SCRIPT SYSTEM ---
+local function LaunchMainSystem()
     local ESP_Settings = {
         Enabled = true, Boxes = true, Tracers = true, Names = true,
         MenuOpen = true, SpeedEnabled = false, FlyEnabled = false,
@@ -166,9 +131,10 @@ local function StartMainScript()
         FOV_Radius = 200, SpinSpeed = 50
     }
 
-    local MainColor = Color3.fromRGB(0, 150, 255) 
-    local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-    ScreenGui.Name = "MasterMenu_Protected"
+    local MainColor = Color3.fromRGB(0, 150, 255)
+
+    local ScreenGui = Instance.new("ScreenGui", GetUIParent())
+    ScreenGui.Name = "TilluMods_AIO_v1"
     ScreenGui.ResetOnSpawn = false
 
     local AimBtn = Instance.new("TextButton", ScreenGui)
@@ -177,7 +143,7 @@ local function StartMainScript()
     AimBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
     AimBtn.Text = "AIM"
     AimBtn.TextColor3 = Color3.new(1, 1, 1)
-    AimBtn.Visible = false 
+    AimBtn.Visible = false
     AimBtn.Draggable = true
     AimBtn.Active = true
     Instance.new("UICorner", AimBtn).CornerRadius = UDim.new(0, 10)
@@ -185,7 +151,7 @@ local function StartMainScript()
     local MainFrame = Instance.new("Frame", ScreenGui)
     MainFrame.Size = UDim2.new(0, 220, 0, 450)
     MainFrame.Position = UDim2.new(0, 20, 0.3, 0)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25) 
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     MainFrame.Active = true
     MainFrame.Draggable = true
     Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
@@ -193,18 +159,17 @@ local function StartMainScript()
     local TitleBar = Instance.new("Frame", MainFrame)
     TitleBar.Size = UDim2.new(1, 0, 0, 35)
     TitleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    TitleBar.BorderSizePixel = 0
     Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 10)
 
     local TitleLabel = Instance.new("TextLabel", TitleBar)
     TitleLabel.Size = UDim2.new(0.7, 0, 1, 0)
     TitleLabel.Position = UDim2.new(0.05, 0, 0, 0)
-    TitleLabel.Text = _0xD({77,65,83,84,69,82,32,77,69,78,85})
+    TitleLabel.Text = "TILLU MODS"
     TitleLabel.TextColor3 = Color3.new(1, 1, 1)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Font = Enum.Font.GothamBold
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TitleLabel.TextSize = 16
+    TitleLabel.TextSize = 14
 
     local MinBtn = Instance.new("TextButton", TitleBar)
     MinBtn.Size = UDim2.new(0, 30, 0, 30)
@@ -226,7 +191,7 @@ local function StartMainScript()
     Content.Size = UDim2.new(1, -20, 1, -55)
     Content.Position = UDim2.new(0, 10, 0, 50)
     Content.BackgroundTransparency = 1
-    Content.CanvasSize = UDim2.new(0, 0, 0, 750) 
+    Content.CanvasSize = UDim2.new(0, 0, 0, 750)
     Content.ScrollBarThickness = 3
     Content.ScrollBarImageColor3 = MainColor
 
@@ -251,7 +216,7 @@ local function StartMainScript()
         btn.Font = Enum.Font.SourceSans
         btn.TextSize = 15
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-        
+
         if valueKey then
             local valInput = Instance.new("TextBox", controlFrame)
             valInput.Size = UDim2.new(0.3, 0, 1, 0)
@@ -261,6 +226,7 @@ local function StartMainScript()
             valInput.Text = tostring(ESP_Settings[valueKey])
             valInput.Font = Enum.Font.Code
             valInput.TextSize = 14
+            valInput.ClipsDescendants = true
             Instance.new("UICorner", valInput).CornerRadius = UDim.new(0, 6)
             valInput.FocusLost:Connect(function()
                 local num = tonumber(valInput.Text)
@@ -272,7 +238,7 @@ local function StartMainScript()
             local isOn = ESP_Settings[stateKey]
             btn.BackgroundColor3 = isOn and MainColor or Color3.fromRGB(50, 50, 50)
         end
-        
+
         btn.MouseButton1Click:Connect(function()
             ESP_Settings[stateKey] = not ESP_Settings[stateKey]
             update()
@@ -291,8 +257,8 @@ local function StartMainScript()
     CreateControl("Fly (Cam Mode)", y, "FlyEnabled", "FlySpeed"); y = y + 40
     CreateControl("Spinbot", y, "SpinbotEnabled", "SpinSpeed"); y = y + 40
     CreateControl("Noclip", y, "NoclipEnabled"); y = y + 40
-    CreateControl("Aimbot Master", y, "AimbotMaster", nil, function(s) 
-        AimBtn.Visible = s 
+    CreateControl("Aimbot Master", y, "AimbotMaster", nil, function(s)
+        AimBtn.Visible = s
         if not s then ESP_Settings.AimbotActive = false end
     end); y = y + 40
 
@@ -306,7 +272,7 @@ local function StartMainScript()
         local char = LocalPlayer.Character
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
         local hum = char and char:FindFirstChild("Humanoid")
-        
+
         if hrp and hum then
             hum.WalkSpeed = ESP_Settings.SpeedEnabled and ESP_Settings.SpeedValue or 16
 
@@ -324,8 +290,8 @@ local function StartMainScript()
 
                 for _, v in pairs(Players:GetPlayers()) do
                     if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
-                        local targetHum = v.Character:FindFirstChild("Humanoid")
-                        if targetHum and targetHum.Health > 0 then
+                        local tHum = v.Character:FindFirstChild("Humanoid")
+                        if tHum and tHum.Health > 0 then
                             local ScreenPos, OnScreen = Camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
                             if OnScreen then
                                 local MouseDist = (Vector2.new(ScreenPos.X, ScreenPos.Y) - Center).Magnitude
@@ -369,23 +335,23 @@ local function StartMainScript()
     end)
 
     local function CreateESP(player)
-        if player == LocalPlayer then return end
+        if player == LocalPlayer or not Drawing then return end
         local line = Drawing.new("Line")
-        line.Thickness = 1.5 
-        line.Visible = false
+        line.Thickness = 1.5
         local box = Drawing.new("Square")
         box.Thickness = 1.5
         box.Filled = false
-        box.Visible = false
 
         local function setup(char)
             local root = char:WaitForChild("HumanoidRootPart", 10)
             local hum = char:WaitForChild("Humanoid", 10)
             if not root or not hum then return end
+
             local gui = Instance.new("BillboardGui", root)
             gui.Size = UDim2.new(0, 150, 0, 60)
             gui.StudsOffset = Vector3.new(0, 4.5, 0)
             gui.AlwaysOnTop = true
+
             local lbl = Instance.new("TextLabel", gui)
             lbl.Size = UDim2.new(1, 0, 1, 0)
             lbl.BackgroundTransparency = 1
@@ -402,10 +368,9 @@ local function StartMainScript()
                     if gui then gui:Destroy() end
                     return
                 end
-                
+
                 local vector, onScreen = Camera:WorldToViewportPoint(root.Position)
-                local hue = tick() % 5 / 5
-                local espColor = Color3.fromHSV(hue, 1, 1)
+                local espColor = Color3.fromHSV(tick() % 5 / 5, 1, 1)
 
                 if onScreen and ESP_Settings.Enabled then
                     if ESP_Settings.Boxes then
@@ -422,14 +387,14 @@ local function StartMainScript()
                     if ESP_Settings.Tracers then
                         line.Color = espColor
                         line.To = Vector2.new(vector.X, vector.Y)
-                        line.From = Vector2.new(Camera.ViewportSize.X / 2, 0) 
+                        line.From = Vector2.new(Camera.ViewportSize.X / 2, 0)
                         line.Visible = true
                     else line.Visible = false end
                 else
                     line.Visible = false
                     box.Visible = false
                 end
-                
+
                 gui.Enabled = ESP_Settings.Enabled and ESP_Settings.Names
                 if gui.Enabled then
                     local dist = (root.Position - Camera.CFrame.Position).Magnitude
@@ -446,25 +411,87 @@ local function StartMainScript()
     Players.PlayerAdded:Connect(CreateESP)
 end
 
+-- --- KEY SYSTEM UI ---
+local KeyGui = Instance.new("ScreenGui", GetUIParent())
+KeyGui.Name = "TilluKeyAuthSystem"
+
+local KeyFrame = Instance.new("Frame", KeyGui)
+KeyFrame.Size = UDim2.new(0, 300, 0, 190)
+KeyFrame.Position = UDim2.new(0.5, -150, 0.5, -95)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+KeyFrame.Active = true
+KeyFrame.Draggable = true
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 8)
+
+local KeyTitle = Instance.new("TextLabel", KeyFrame)
+KeyTitle.Size = UDim2.new(1, 0, 0, 40)
+KeyTitle.Text = "TILLU MODS - KEY SYSTEM"
+KeyTitle.TextColor3 = Color3.new(1, 1, 1)
+KeyTitle.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+KeyTitle.Font = Enum.Font.GothamBold
+KeyTitle.TextSize = 14
+Instance.new("UICorner", KeyTitle).CornerRadius = UDim.new(0, 8)
+
+local TextBox = Instance.new("TextBox", KeyFrame)
+TextBox.Size = UDim2.new(0.8, 0, 0, 40)
+TextBox.Position = UDim2.new(0.1, 0, 0.32, 0)
+TextBox.PlaceholderText = "Paste License Key..."
+TextBox.Text = ""
+TextBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+TextBox.TextColor3 = Color3.new(1, 1, 1)
+TextBox.Font = Enum.Font.SourceSans
+TextBox.TextSize = 13
+TextBox.ClearTextOnFocus = false
+TextBox.TextWrapped = true
+Instance.new("UICorner", TextBox)
+
+local SubmitBtn = Instance.new("TextButton", KeyFrame)
+SubmitBtn.Size = UDim2.new(0, 100, 0, 38)
+SubmitBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
+SubmitBtn.Text = "Submit"
+SubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
+SubmitBtn.TextColor3 = Color3.new(1, 1, 1)
+SubmitBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", SubmitBtn)
+
+local GetKeyBtn = Instance.new("TextButton", KeyFrame)
+GetKeyBtn.Size = UDim2.new(0, 100, 0, 38)
+GetKeyBtn.Position = UDim2.new(0.56, 0, 0.65, 0)
+GetKeyBtn.Text = "Get Key"
+GetKeyBtn.BackgroundColor3 = Color3.fromRGB(200, 150, 0)
+GetKeyBtn.TextColor3 = Color3.new(1, 1, 1)
+GetKeyBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", GetKeyBtn)
+
+GetKeyBtn.MouseButton1Click:Connect(function()
+    if setclipboard then
+        setclipboard(_DISCORD)
+        GetKeyBtn.Text = "COPIED!"
+        task.wait(1.5)
+        GetKeyBtn.Text = "Get Key"
+    end
+    pcall(function() GuiService:OpenBrowserWindow(_DISCORD) end)
+end)
+
 SubmitBtn.MouseButton1Click:Connect(function()
     local userKey = TextBox.Text
     if userKey == "" then
-        TextBox.PlaceholderText = _0xD({69,110,116,101,114,32,107,101,121,32,102,105,114,115,116,33})
+        TextBox.PlaceholderText = "Enter key first!"
         return
     end
-    
-    SubmitBtn.Text = _0xD({67,104,101,99,107,105,110,103,46,46,46})
-    
+
+    SubmitBtn.Text = "Checking..."
     task.spawn(function()
-        local isValid, message = VerifyKeyAuth(userKey)
-        if isValid then
+        local ok, msg = VerifyKey(userKey)
+        if ok then
             SubmitBtn.Text = "Success!"
             task.wait(0.5)
-            StartMainScript()
+            KeyGui:Destroy()
+            LaunchMainSystem()
         else
             TextBox.Text = ""
-            TextBox.PlaceholderText = message or "INVALID KEY!"
-            SubmitBtn.Text = _0xD({83,117,98,109,105,116})
+            TextBox.PlaceholderText = tostring(msg or "INVALID KEY!")
+            SubmitBtn.Text = "Submit"
         end
     end)
 end)
